@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hm.streamtest.mapper.ProcessorMapper">
+
+    <!-- resultMap for Scheme -->
+    <resultMap id="SchemeResultMap" type="hm.streamtest.dto.Scheme">
+        <result property="schemeCode" column="scheme_code"/>
+        <result property="schemeName" column="scheme_name"/>
+    </resultMap>
+    
+    <!-- resultMap for PaymentType -->
+    <resultMap id="PaymentTypeResultMap" type="hm.streamtest.dto.PaymentType">
+        <result property="paymentType" column="payment_type"/>
+        <collection property="schemes" ofType="hm.streamtest.dto.Scheme" resultMap="SchemeResultMap"/>
+    </resultMap>
+    
+    <!-- resultMap for Processor -->
+    <resultMap id="ProcessorResultMap" type="hm.streamtest.dto.Processor">
+        <id property="processorId" column="processor_id"/>
+        <result property="processorName" column="processor_name"/>
+        <result property="partnerCode" column="partner_code"/>
+        <collection property="paymentTypes" ofType="hm.streamtest.dto.PaymentType" resultMap="PaymentTypeResultMap"/>
+    </resultMap>
+    
+    <!-- Query using resultMap approach -->
+    <select id="findAllProcessorsWithDetails" resultMap="ProcessorResultMap">
+        SELECT
+            proc.processor_id AS processor_id,
+            proc.processor_name AS processor_name,
+            proc.partner_code AS partner_code,
+            pay.payment_type AS payment_type,
+            s.scheme_code AS scheme_code,
+            s.scheme_name AS scheme_name
+        FROM
+            Processor proc
+        LEFT JOIN
+            Payment pay ON proc.processor_id = pay.processor_id
+                         AND proc.partner_code = pay.partner_code
+        LEFT JOIN
+            Scheme s ON pay.scheme_code = s.scheme_code
+        ORDER BY
+            proc.processor_id, pay.payment_type, s.scheme_code
+    </select>
+
+    <!-- Query using flat data approach -->
+    <select id="findAllProcessorsAsFlatData" resultType="hm.streamtest.dto.FlatProcessorData">
+        SELECT
+            proc.processor_id AS processorId,
+            proc.processor_name AS processorName,
+            proc.partner_code AS partnerCode,
+            pay.payment_type AS paymentType,
+            s.scheme_code AS schemeCode,
+            s.scheme_name AS schemeName
+        FROM
+            Processor proc
+        LEFT JOIN
+            Payment pay ON proc.processor_id = pay.processor_id
+                         AND proc.partner_code = pay.partner_code
+        LEFT JOIN
+            Scheme s ON pay.scheme_code = s.scheme_code
+        ORDER BY
+            proc.processor_id, pay.payment_type, s.scheme_code
+    </select>
+</mapper>
